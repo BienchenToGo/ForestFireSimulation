@@ -6,8 +6,10 @@ SCREEN_SIZE = 500
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 
 # Size of a tree
-TREE_COUNT = 100
+TREE_COUNT = 200
 TREE_SIZE = SCREEN_SIZE  / TREE_COUNT
+
+SPREAD_POSSIBILITY = 0.25
 
 # Color
 GREEN = (0, 255, 0)
@@ -46,9 +48,8 @@ class Tree:
                 return
 
     def spread(self):
-        if self.isOnFire:
-            for neighbour in self.neighbours:
-                neighbour.set_on_fire()
+        if self.isOnFire and random.choice(range(int(1 / SPREAD_POSSIBILITY))) == 0:
+            self.neighbours[random.choice(range(4))].set_on_fire()
 
 
 def flatten_matrix(matrix):
@@ -92,10 +93,10 @@ def main():
     # Convert matrix to list
     trees = flatten_matrix(trees)
 
-    # Set random tree on fire
-    #trees[int(random.choice(range(TREE_COUNT)))][int(random.choice(range(TREE_COUNT)))].set_on_fire()
-    random_tree = int(random.choice(range(TREE_COUNT * TREE_COUNT)))
-    trees[random_tree].set_on_fire()
+    # Set three trees on fire
+    for i in range(10):
+        random_tree = int(random.choice(range(TREE_COUNT * TREE_COUNT)))
+        trees[random_tree].set_on_fire()
 
     trees_on_fire = []
 
