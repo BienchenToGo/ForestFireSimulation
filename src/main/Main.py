@@ -6,15 +6,18 @@ SCREEN_SIZE = 500
 screen = pygame.display.set_mode((SCREEN_SIZE, SCREEN_SIZE))
 
 # Size of a tree
-TREE_COUNT = 200
+TREE_COUNT = 100
 TREE_SIZE = SCREEN_SIZE  / TREE_COUNT
 
-SPREAD_POSSIBILITY = 0.25
+SPREAD_POSSIBILITY = 1
+TREE_GROW_POSSIBILITY = 0.001
+FIRE_POSSIBILITY = 0.001
 
 # Color
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
+BLACK = (0, 0, 0)
 
 class Tree:
     def __init__(self, x, y):
@@ -22,13 +25,15 @@ class Tree:
         self.neighbours = []
 
         # Koordinates
-        self.x = x
-        self.y = y
+        self.x = x * TREE_SIZE
+        self.y = y * TREE_SIZE
 
         self.isOnFire = False
+        self.isDead = True
+        self.spreaded = False
 
         # Draw the tree
-        pygame.draw.rect(screen, GREEN, (self.x * TREE_SIZE, self.y * TREE_SIZE, TREE_SIZE, TREE_SIZE))
+        pygame.draw.rect(screen, BLACK, (self.x, self.y, TREE_SIZE, TREE_SIZE))
 
     def set_neighbours(self, neighbours):
         self.neighbours = neighbours
@@ -37,8 +42,18 @@ class Tree:
         return self.isOnFire
 
     def set_on_fire(self):
-        self.isOnFire = True
-        pygame.draw.rect(screen, RED, (self.x * TREE_SIZE, self.y * TREE_SIZE, TREE_SIZE, TREE_SIZE))
+        if not self.isDead:
+            self.isOnFire = True
+            pygame.draw.rect(screen, RED, (self.x, self.y, TREE_SIZE, TREE_SIZE))
+
+    def initiate_fire(self):
+        if random.choice(range(int(1 / FIRE_POSSIBILITY))) == 0:
+            self.set_on_fire()
+
+    def grow(self):
+        if self.isDead and random.choice(range(int(1 / TREE_GROW_POSSIBILITY))) == 0:
+            pygame.draw.rect(screen, GREEN, (self.x, self.y, TREE_SIZE, TREE_SIZE))
+            self.isDead = False
 
 
     def update(self):
@@ -48,7 +63,7 @@ class Tree:
                 return
 
     def spread(self):
-        if self.isOnFire and random.choice(range(int(1 / SPREAD_POSSIBILITY))) == 0:
+        if not self.spreaded and self.isOnFire and random.choice(range(int(1 / SPREAD_POSSIBILITY))) == 0:
             self.neighbours[random.choice(range(4))].set_on_fire()
 
 
@@ -93,10 +108,10 @@ def main():
     # Convert matrix to list
     trees = flatten_matrix(trees)
 
-    # Set three trees on fire
-    for i in range(10):
-        random_tree = int(random.choice(range(TREE_COUNT * TREE_COUNT)))
-        trees[random_tree].set_on_fire()
+    # Set trees on fire
+    #for i in range(5):
+    #    random_tree = int(random.choice(range(TREE_COUNT * TREE_COUNT)))
+    #    trees[random_tree].set_on_fire()
 
     trees_on_fire = []
 
@@ -104,18 +119,25 @@ def main():
 
     running = True
     while running:
+        # Pygame quit event
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-        # Update trees_on_fire
+        # Grow dead trees
         for tree in trees:
-            if tree.is_on_fire() and not tree in trees_on_fire:
-                trees_on_fire.append(tree)
+            tree.grow()
+            tree.initiate_fire()
+
+        # Update trees_on_fire
+        #for tree in trees:
+        #    if tree.is_on_fire() and not tree in trees_on_fire:
+        #        trees_on_fire.append(tree)
 
         # Update spread
-        for tree in trees_on_fire:
-            tree.spread()
+        #for tree in trees_on_fire:
+        #    tree.spread()
+        #    trees_on_fire.remove(tree)
 
         # Refresh
         pygame.display.update()
